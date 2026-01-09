@@ -1,0 +1,75 @@
+{{- if .Values.clickhouse.enabled }}
+apiVersion: clickhouse.altinity.com/v1
+kind: ClickHouseInstallation
+metadata:
+  name: {{ .Values.clickhouse.name }}
+  namespace: {{ include "clickhouse.namespace" . }}
+spec:
+  defaults:
+    templates:
+      podTemplate: {{ .Values.clickhouse.templates.podTemplate }}
+      dataVolumeClaimTemplate: {{ .Values.clickhouse.templates.dataVolumeClaimTemplate }}
+      serviceTemplate: {{ .Values.clickhouse.templates.serviceTemplate }}
+  configuration:
+    users:
+      {{ .Values.clickhouse.users.admin.username }}:
+        password: {{ .Values.clickhouse.users.admin.password | quote }}
+        networks:
+          ip: {{ .Values.clickhouse.users.admin.networks.ip | quote }}
+        profile: {{ .Values.clickhouse.users.admin.profile }}
+    {{- if .Values.clickhouse.configuration.profiles }}
+    profiles:
+      {{- toYaml .Values.clickhouse.configuration.profiles | nindent 6 }}
+    {{- end }}
+    clusters:
+      - name: {{ .Values.clickhouse.cluster.name | quote }}
+        layout:
+          shardsCount: {{ int .Values.clickhouse.cluster.shardsCount }}
+          replicasCount: {{ int .Values.clickhouse.cluster.replicasCount }}
+    {{- if .Values.clickhouse.zookeeper.enabled }}
+    zookeeper:
+      nodes:
+        {{- range $index := until (int .Values.keeper.replicasCount) }}
+        - host: {{ printf "chk-%s-%s-0-%d" $.Values.keeper.name $.Values.keeper.clusterName $index }}
+          port: {{ $.Values.keeper.zookeeperPort }}
+        {{- end }}
+    {{- end }}
+  templates:
+    podTemplates:
+      - name: {{ .Values.clickhouse.templates.podTemplate }}
+        metadata:
+          {{- with .Values.clickhouse.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          containers:
+            - name: clickhouse
+              image: {{ printf "%s:%s" .Values.clickhouse.image.repository .Values.clickhouse.image.tag }}
+              {{- with .Values.clickhouse.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.clickhouse.env }}
+              env:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+    volumeClaimTemplates:
+      - name: {{ .Values.clickhouse.templates.dataVolumeClaimTemplate }}
+        spec:
+          accessModes:
+            {{- toYaml .Values.clickhouse.storage.accessModes | nindent 12 }}
+          resources:
+            requests:
+              storage: {{ .Values.clickhouse.storage.size }}
+    serviceTemplates:
+      - name: {{ .Values.clickhouse.templates.serviceTemplate }}
+        spec:
+          ports:
+            {{- range .Values.clickhouse.service.ports }}
+            - name: {{ .name }}
+              port: {{ .port }}
+            {{- end }}
+          type: {{ .Values.clickhouse.service.type }}
+{{- end }}
+

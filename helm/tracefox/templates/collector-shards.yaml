@@ -1,0 +1,71 @@
+{{- $shards := int .Values.collector.shards }}
+{{- range $i, $e := until $shards }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-shard-{{ $i }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: collector-shard-{{ $i }}
+    {{- include "tracefox.labels" $ | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector-shard-{{ $i }}
+  template:
+    metadata:
+      labels:
+        app: collector-shard-{{ $i }}
+    spec:
+      containers:
+      - name: collector
+        image: "{{ $.Values.collector.image.repository }}:{{ $.Values.collector.image.tag }}"
+        imagePullPolicy: {{ $.Values.collector.image.pullPolicy }}
+        ports:
+        - containerPort: 4317
+          name: grpc
+        - containerPort: 4318
+          name: http
+        env:
+        - name: OPAMP_SERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "tracefox.fullname" $ }}-config
+              key: OPAMP_SERVER_URL
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "hdx.shard_id=shard-{{ $i }}"
+        - name: HDX_SHARD_ID
+          value: "shard-{{ $i }}"
+        - name: HYPERDX_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "tracefox.fullname" $ }}-config
+              key: HYPERDX_LOG_LEVEL
+        - name: CLICKHOUSE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "tracefox.fullname" $ }}-config
+              key: CLICKHOUSE_ENDPOINT
+        resources:
+          {{- toYaml $.Values.collector.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector-shard-{{ $i }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: collector-shard-{{ $i }}
+spec:
+  ports:
+  - port: 4317
+    name: grpc
+    targetPort: 4317
+  - port: 4318
+    name: http
+    targetPort: 4318
+  selector:
+    app: collector-shard-{{ $i }}
+---
+{{- end }}

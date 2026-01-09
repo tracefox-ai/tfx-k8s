@@ -1,0 +1,40 @@
+# Staging environment values for ClickHouse chart
+
+keeper:
+  enabled: true
+  replicasCount: 3
+  
+  resources:
+    requests:
+      memory: "256M"
+      cpu: "1"
+    limits:
+      memory: "2Gi"
+      cpu: "2"
+  
+  storage:
+    size: 10Gi
+
+clickhouse:
+  enabled: true
+  cluster:
+    shardsCount: 2
+    replicasCount: 2
+  
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  storage:
+    size: 5Gi
+  
+  users:
+    admin:
+      password: "staging-password"
+  
+  service:
+    type: ClusterIP

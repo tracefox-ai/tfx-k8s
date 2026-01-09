@@ -1,0 +1,125 @@
+# Default values for clickhouse
+# This is a YAML-formatted file.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ClickHouse Keeper configuration
+keeper:
+  enabled: true
+  name: clickhouse-keeper
+  clusterName: tracefox
+  replicasCount: 3
+  zookeeperPort: 2181
+  
+  image:
+    repository: clickhouse/clickhouse-keeper
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  resources:
+    requests:
+      memory: "256M"
+      cpu: "1"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
+  
+  securityContext:
+    fsGroup: 101
+  
+  storage:
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+  
+  templates:
+    podTemplate: clickhouse-keeper-pod
+    dataVolumeClaimTemplate: clickhouse-keeper-data
+  
+  annotations:
+    prometheus.io/port: "7000"
+    prometheus.io/scrape: "true"
+  
+  podAnnotations:
+    prometheus.io/port: "7000"
+    prometheus.io/scrape: "true"
+  
+  configuration:
+    settings:
+      logger/level: "trace"
+      logger/console: "true"
+      listen_host: "0.0.0.0"
+      keeper_server/four_letter_word_white_list: "*"
+      keeper_server/coordination_settings/raft_logs_level: "information"
+      prometheus/endpoint: "/metrics"
+      prometheus/port: "7000"
+      prometheus/metrics: "true"
+      prometheus/events: "true"
+      prometheus/asynchronous_metrics: "true"
+      prometheus/status_info: "false"
+
+# ClickHouse Installation configuration
+clickhouse:
+  enabled: true
+  name: clickhouse
+  cluster:
+    name: tracefox
+    shardsCount: 2
+    replicasCount: 2
+  
+  image:
+    repository: clickhouse/clickhouse-server
+    tag: 25.7-alpine
+    pullPolicy: IfNotPresent
+  
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  storage:
+    size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+  
+  templates:
+    podTemplate: clickhouse-pod
+    dataVolumeClaimTemplate: clickhouse-data
+    serviceTemplate: clickhouse-service
+  
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8001"
+    prometheus.io/path: "/metrics"
+  
+  env:
+    - name: CLICKHOUSE_DO_NOT_MOUNT_CONFIG_MAPS
+      value: "1"
+  
+  users:
+    admin:
+      username: admin
+      password: admin
+      networks:
+        ip: "::/0"
+      profile: default
+  
+  configuration:
+    profiles:
+      default:
+        allow_experimental_analyzer: 1
+  
+  zookeeper:
+    enabled: true
+  
+  service:
+    type: LoadBalancer
+    ports:
+      - name: http
+        port: 8123
+      - name: tcp
+        port: 9000

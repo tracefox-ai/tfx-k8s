@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tracefox.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tracefox.labels" . | nindent 4 }}
+data:
+  HYPERDX_LOG_LEVEL: {{ .Values.app.env.HYPERDX_LOG_LEVEL | quote }}
+  HYPERDX_APP_URL: "{{ .Values.global.protocol }}://{{ .Values.global.domain }}"
+  FRONTEND_URL: {{ .Values.frontendUrl | quote }}
+  HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE: {{ .Values.clickhouse.database | quote }}
+  HYPERDX_OPAMP_PORT: {{ .Values.app.service.ports.opamp | quote }}
+  HYPERDX_API_PORT: {{ .Values.app.service.ports.api | quote }}
+  HYPERDX_APP_PORT: {{ .Values.app.service.ports.app | quote }}
+  CLICKHOUSE_ADMIN_USER: {{ .Values.clickhouse.adminUser | quote }}
+  CLICKHOUSE_ADMIN_HOST: "http://{{ .Values.clickhouse.host }}:{{ .Values.clickhouse.port }}"
+  # Used by collectors
+  OPAMP_SERVER_URL: "http://app:{{ .Values.app.service.ports.opamp }}"
+  CLICKHOUSE_ENDPOINT: "tcp://{{ .Values.clickhouse.host }}:{{ .Values.clickhouse.tcpPort }}?dial_timeout=10s"
+  
+  # Ingestion endpoints (internal k8s dns)
+  # Dynamically generate based on shard count
+  {{- $shards := int .Values.collector.shards }}
+  {{- $grpcPorts := list }}
+  {{- $httpPorts := list }}
+  {{- range $i, $e := until $shards }}
+    {{- $grpcPorts = append $grpcPorts (printf "http://collector-shard-%d:4317" $i) }}
+    {{- $httpPorts = append $httpPorts (printf "http://collector-shard-%d:4318" $i) }}
+  {{- end }}
+  INGESTION_SHARD_GRPC_ENDPOINTS: {{ join "," $grpcPorts | quote }}
+  INGESTION_SHARD_HTTP_ENDPOINTS: {{ join "," $httpPorts | quote }}
+  
+  USAGE_STATS_ENABLED: {{ .Values.app.env.USAGE_STATS_ENABLED | quote }}
+  CLICKHOUSE_TENANT_PROVISIONING_ENABLED: {{ .Values.app.env.CLICKHOUSE_TENANT_PROVISIONING_ENABLED | quote }}
+  MINER_API_URL: "http://miner:5123"
+  SERVER_URL: "http://127.0.0.1:{{ .Values.app.service.ports.api }}"
+  OTEL_SERVICE_NAME: "hdx-oss-app"
+  
+  # Connections and Sources
+  # Warning: Passwords here are visible in ConfigMap.
+  DEFAULT_CONNECTIONS: |
+    [{"name":"Local ClickHouse","host":"http://{{ .Values.clickhouse.host }}:{{ .Values.clickhouse.port }}","username":"{{ .Values.clickhouse.adminUser }}","password":"{{ .Values.secrets.clickhouseAdminPassword }}"}]
+  DEFAULT_SOURCES: |
+    [{"from":{"databaseName":"{{ .Values.clickhouse.database }}","tableName":"otel_logs"},"kind":"log","timestampValueExpression":"TimestampTime","name":"Logs","displayedTimestampValueExpression":"Timestamp","implicitColumnExpression":"Body","serviceNameExpression":"ServiceName","bodyExpression":"Body","eventAttributesExpression":"LogAttributes","resourceAttributesExpression":"ResourceAttributes","defaultTableSelectExpression":"Timestamp,ServiceName,SeverityText,Body","severityTextExpression":"SeverityText","traceIdExpression":"TraceId","spanIdExpression":"SpanId","connection":"Local ClickHouse","traceSourceId":"Traces","sessionSourceId":"Sessions","metricSourceId":"Metrics"},{"from":{"databaseName":"{{ .Values.clickhouse.database }}","tableName":"otel_traces"},"kind":"trace","timestampValueExpression":"Timestamp","name":"Traces","displayedTimestampValueExpression":"Timestamp","implicitColumnExpression":"SpanName","serviceNameExpression":"ServiceName","bodyExpression":"SpanName","eventAttributesExpression":"SpanAttributes","resourceAttributesExpression":"ResourceAttributes","defaultTableSelectExpression":"Timestamp,ServiceName,StatusCode,round(Duration/1e6),SpanName","traceIdExpression":"TraceId","spanIdExpression":"SpanId","durationExpression":"Duration","durationPrecision":9,"parentSpanIdExpression":"ParentSpanId","spanNameExpression":"SpanName","spanKindExpression":"SpanKind","statusCodeExpression":"StatusCode","statusMessageExpression":"StatusMessage","connection":"Local ClickHouse","logSourceId":"Logs","sessionSourceId":"Sessions","metricSourceId":"Metrics"},{"from":{"databaseName":"{{ .Values.clickhouse.database }}","tableName":""},"kind":"metric","timestampValueExpression":"TimeUnix","name":"Metrics","resourceAttributesExpression":"ResourceAttributes","metricTables":{"gauge":"otel_metrics_gauge","histogram":"otel_metrics_histogram","sum":"otel_metrics_sum","_id":"682586a8b1f81924e628e808","id":"682586a8b1f81924e628e808"},"connection":"Local ClickHouse","logSourceId":"Logs","traceSourceId":"Traces","sessionSourceId":"Sessions"},{"from":{"databaseName":"{{ .Values.clickhouse.database }}","tableName":"hyperdx_sessions"},"kind":"session","timestampValueExpression":"TimestampTime","name":"Sessions","displayedTimestampValueExpression":"Timestamp","implicitColumnExpression":"Body","serviceNameExpression":"ServiceName","bodyExpression":"Body","eventAttributesExpression":"LogAttributes","resourceAttributesExpression":"ResourceAttributes","defaultTableSelectExpression":"Timestamp,ServiceName,SeverityText,Body","severityTextExpression":"SeverityText","traceIdExpression":"TraceId","spanIdExpression":"SpanId","connection":"Local ClickHouse","logSourceId":"Logs","traceSourceId":"Traces","metricSourceId":"Metrics"}]

@@ -1,0 +1,41 @@
+# Production environment values for ClickHouse chart
+
+keeper:
+  enabled: true
+  replicasCount: 3
+  
+  resources:
+    requests:
+      memory: "512M"
+      cpu: "2"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+  
+  storage:
+    size: 50Gi
+
+clickhouse:
+  enabled: true
+  cluster:
+    shardsCount: 4
+    replicasCount: 3
+  
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "2000m"
+    limits:
+      memory: "8Gi"
+      cpu: "4000m"
+  
+  storage:
+    size: 100Gi
+  
+  users:
+    admin:
+      password: "prod-password"
+  
+  service:
+    type: LoadBalancer
+

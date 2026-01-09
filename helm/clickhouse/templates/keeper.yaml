@@ -1,0 +1,55 @@
+{{- if .Values.keeper.enabled }}
+apiVersion: clickhouse-keeper.altinity.com/v1
+kind: ClickHouseKeeperInstallation
+metadata:
+  name: {{ .Values.keeper.name }}
+  namespace: {{ include "clickhouse.namespace" . }}
+  {{- with .Values.keeper.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  configuration:
+    clusters:
+      - name: {{ .Values.keeper.clusterName | quote }}
+        layout:
+          replicasCount: {{ int .Values.keeper.replicasCount }}
+    settings:
+      {{- toYaml .Values.keeper.configuration.settings | nindent 6 }}
+  defaults:
+    templates:
+      podTemplate: {{ .Values.keeper.templates.podTemplate }}
+      dataVolumeClaimTemplate: {{ .Values.keeper.templates.dataVolumeClaimTemplate }}
+  templates:
+    podTemplates:
+      - name: {{ .Values.keeper.templates.podTemplate }}
+        metadata:
+          labels:
+            app: clickhouse-keeper
+          {{- with .Values.keeper.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          containers:
+            - name: clickhouse-keeper
+              imagePullPolicy: {{ .Values.keeper.image.pullPolicy }}
+              image: {{ printf "%s:%s" .Values.keeper.image.repository .Values.keeper.image.tag }}
+              {{- with .Values.keeper.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          {{- with .Values.keeper.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+    volumeClaimTemplates:
+      - name: {{ .Values.keeper.templates.dataVolumeClaimTemplate }}
+        spec:
+          accessModes:
+            {{- toYaml .Values.keeper.storage.accessModes | nindent 12 }}
+          resources:
+            requests:
+              storage: {{ .Values.keeper.storage.size }}
+{{- end }}
+

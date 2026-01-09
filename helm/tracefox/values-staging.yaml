@@ -1,0 +1,18 @@
+global:
+  domain: "staging.tracefox.ai"
+  protocol: "https"
+
+app:
+  replicaCount: 2
+  env:
+    HYPERDX_LOG_LEVEL: "info" # More verbose for debugging
+
+frontendUrl: "https://staging.tracefox.ai"
+
+collector:
+  shards: 2
+
+secrets:
+  # In reality, do NOT commit secrets here. Use external-secrets or a secure way to inject them.
+  hyperdxApiKey: "staging-key"
+  clickhouseAdminPassword: "staging-password"

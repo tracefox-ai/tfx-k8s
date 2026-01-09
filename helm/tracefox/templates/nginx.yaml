@@ -1,0 +1,108 @@
+{{- if .Values.nginx.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nginx
+    {{- include "tracefox.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+    
+    events {
+        worker_connections 1024;
+    }
+    
+    stream {
+        server {
+            listen {{ .Values.nginx.service.ports.grpc }};
+            proxy_pass otlp-gateway:{{ .Values.otlpGateway.service.ports.grpc }};
+            proxy_timeout 1s;
+            proxy_responses 1;
+            error_log /var/log/nginx/grpc_error.log;
+        }
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+        gzip on;
+        
+        server {
+            listen {{ .Values.nginx.service.ports.http }};
+            server_name _;
+            
+            location / {
+                proxy_pass http://app:{{ .Values.app.service.ports.app }};
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nginx
+    {{- include "tracefox.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.nginx.service.ports.http }}
+        - containerPort: {{ .Values.nginx.service.ports.grpc }}
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        resources:
+          {{- toYaml .Values.nginx.resources | nindent 10 }}
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nginx
+spec:
+  type: {{ .Values.nginx.service.type }}
+  ports:
+  - name: http
+    port: {{ .Values.nginx.service.ports.http }}
+    targetPort: {{ .Values.nginx.service.ports.http }}
+  - name: grpc
+    port: {{ .Values.nginx.service.ports.grpc }}
+    targetPort: {{ .Values.nginx.service.ports.grpc }}
+  selector:
+    app: nginx
+{{- end }}

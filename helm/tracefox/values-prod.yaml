@@ -1,0 +1,22 @@
+global:
+  domain: "tracefox.ai"
+  protocol: "https"
+
+app:
+  replicaCount: 5 # Higher scale for prod
+  env:
+    HYPERDX_LOG_LEVEL: "error"
+
+frontendUrl: "https://tracefox.ai"
+
+collector:
+  shards: 4 # More shards for ingestion
+
+mongo:
+  storage:
+    size: 100Gi
+
+secrets:
+  # In reality, do NOT commit secrets here. Use external-secrets or a secure way to inject them.
+  hyperdxApiKey: "prod-key"
+  clickhouseAdminPassword: "prod-password"

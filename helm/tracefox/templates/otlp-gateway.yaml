@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otlp-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: otlp-gateway
+    {{- include "tracefox.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.otlpGateway.replicaCount }}
+  selector:
+    matchLabels:
+      app: otlp-gateway
+  template:
+    metadata:
+      labels:
+        app: otlp-gateway
+    spec:
+      containers:
+      - name: otlp-gateway
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["node", "-r", "./node_modules/@hyperdx/node-opentelemetry/build/src/tracing", "./packages/api/build/otelGateway/index.js"]
+        ports:
+        - containerPort: {{ .Values.otlpGateway.service.ports.grpc }}
+          name: grpc
+        - containerPort: {{ .Values.otlpGateway.service.ports.http }}
+          name: http
+        envFrom:
+        - configMapRef:
+            name: {{ include "tracefox.fullname" . }}-config
+        - secretRef:
+            name: {{ include "tracefox.fullname" . }}-secrets
+        env:
+        - name: OTLP_GATEWAY_GRPC_PORT
+          value: {{ .Values.otlpGateway.service.ports.grpc | quote }}
+        - name: OTLP_GATEWAY_HTTP_PORT
+          value: {{ .Values.otlpGateway.service.ports.http | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otlp-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: otlp-gateway
+spec:
+  type: {{ .Values.otlpGateway.service.type }}
+  ports:
+  - port: {{ .Values.otlpGateway.service.ports.grpc }}
+    name: grpc
+    targetPort: {{ .Values.otlpGateway.service.ports.grpc }}
+  - port: {{ .Values.otlpGateway.service.ports.http }}
+    name: http
+    targetPort: {{ .Values.otlpGateway.service.ports.http }}
+  selector:
+    app: otlp-gateway

@@ -1,0 +1,80 @@
+global:
+  domain: "localhost"
+  protocol: "http"
+
+image:
+  repository: docker.hyperdx.io/hyperdx/hyperdx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "2.11.0"
+
+nameOverride: ""
+fullnameOverride: ""
+
+app:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    ports:
+      api: 8000
+      app: 8080
+      opamp: 4320
+  env:
+    HYPERDX_LOG_LEVEL: "error"
+    USAGE_STATS_ENABLED: "true"
+    CLICKHOUSE_TENANT_PROVISIONING_ENABLED: "true"
+
+otlpGateway:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    ports:
+      grpc: 4317
+      http: 4318
+
+collector:
+  image:
+    repository: hyperdx/otel-collector
+    tag: dev
+    pullPolicy: IfNotPresent
+  shards: 2 # Number of collector shards to deploy
+  resources: {}
+
+mongo:
+  image:
+    repository: mongo
+    tag: 5.0.32-focal
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  resources: {}
+
+nginx:
+  enabled: true
+  image:
+    repository: nginx
+    tag: 1.27.3
+  service:
+    type: LoadBalancer
+    ports:
+      http: 80
+      grpc: 4317
+  resources: {}
+
+clickhouse:
+  host: "clickhouse-tracefox"
+  port: 8123
+  tcpPort: 9000
+  database: "default"
+  adminUser: "admin"
+  # adminPassword should be set in secrets
+
+secrets:
+  # Base64 encoded secrets can be managed here or via external-secrets.
+  # For this chart, we'll accept plain text values and encode them in the template or use generic secret mechanism.
+  # IN PRODUCTION: Use a secret management solution.
+  hyperdxApiKey: "change-me"
+  clickhouseAdminPassword: "admin"
+  mongoUri: "mongodb://mongo:27017/hyperdx"
+
+frontendUrl: "https://demo.tracefox.ai"

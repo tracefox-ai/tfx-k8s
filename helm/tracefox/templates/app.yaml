@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: app
+    {{- include "tracefox.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+      - name: app
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.app.service.ports.api }}
+          name: api
+        - containerPort: {{ .Values.app.service.ports.app }}
+          name: app
+        - containerPort: {{ .Values.app.service.ports.opamp }}
+          name: opamp
+        envFrom:
+        - configMapRef:
+            name: {{ include "tracefox.fullname" . }}-config
+        - secretRef:
+            name: {{ include "tracefox.fullname" . }}-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: app
+spec:
+  type: {{ .Values.app.service.type }}
+  ports:
+  - port: {{ .Values.app.service.ports.api }}
+    name: api
+    targetPort: {{ .Values.app.service.ports.api }}
+  - port: {{ .Values.app.service.ports.app }}
+    name: app
+    targetPort: {{ .Values.app.service.ports.app }}
+  - port: {{ .Values.app.service.ports.opamp }}
+    name: opamp
+    targetPort: {{ .Values.app.service.ports.opamp }}
+  selector:
+    app: app
