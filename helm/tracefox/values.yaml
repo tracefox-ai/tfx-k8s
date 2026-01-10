@@ -40,15 +40,15 @@ collector:
   shards: 2 # Number of collector shards to deploy
   resources: {}
 
-mongo:
-  enabled: false  # MongoDB is now managed by a separate chart (helm/mongo)
-  image:
-    repository: mongo
-    tag: 5.0.32-focal
-    pullPolicy: IfNotPresent
-  storage:
-    size: 10Gi
-  resources: {}
+# mongo:
+#   enabled: false  # MongoDB is now managed by a separate chart (helm/mongo)
+#   image:
+#     repository: mongo
+#     tag: 5.0.32-focal
+#     pullPolicy: IfNotPresent
+#   storage:
+#     size: 10Gi
+#   resources: {}
 
 nginx:
   enabled: true

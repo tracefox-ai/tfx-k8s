@@ -16,7 +16,7 @@ spec:
         - values-staging.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: staging
+    namespace: default
   syncPolicy:
     automated:
       prune: true

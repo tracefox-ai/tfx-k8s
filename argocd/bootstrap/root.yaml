@@ -13,7 +13,7 @@ spec:
     path: argocd/apps
     directory:
       recurse: true
-      include: '*/app-of-apps.yaml'
+      include: '{infrastructure,staging}/app-of-apps.yaml'  # Exclude production for now
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

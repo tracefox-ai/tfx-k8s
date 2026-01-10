@@ -8,9 +8,11 @@ metadata:
 spec:
   description: Staging environment applications
   
-  # Restrict to staging namespace only
+  # Allow deployment to default namespace and argocd namespace (for App of Apps)
   destinations:
-    - namespace: staging
+    - namespace: default
+      server: https://kubernetes.default.svc
+    - namespace: argocd
       server: https://kubernetes.default.svc
   
   # Allow sources from tfx-k8s repo only

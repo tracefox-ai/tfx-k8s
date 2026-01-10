@@ -8,9 +8,11 @@ metadata:
 spec:
   description: Production environment applications
   
-  # Restrict to production namespace only
+  # Allow deployment to default namespace and argocd namespace (for App of Apps)
   destinations:
-    - namespace: production
+    - namespace: default
+      server: https://kubernetes.default.svc
+    - namespace: argocd
       server: https://kubernetes.default.svc
   
   # Allow sources from tfx-k8s repo only

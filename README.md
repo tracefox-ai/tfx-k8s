@@ -257,6 +257,8 @@ kubectl get applications -n argocd -w
 4. Each App of Apps deployed its applications
 5. Everything syncs automatically from Git
 
+> **📘 For Docker Desktop local development:** See [DOCKER_DESKTOP.md](DOCKER_DESKTOP.md) for detailed instructions on deploying to Docker Desktop with production disabled.
+
 ---
 
 ## Detailed Deployment Guide
