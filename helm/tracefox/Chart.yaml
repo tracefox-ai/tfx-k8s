@@ -4,3 +4,20 @@ description: A Helm chart for TraceFox Observability Platform
 type: application
 version: 0.1.0
 appVersion: "2.11.0"
+
+keywords:
+  - observability
+  - monitoring
+  - logging
+  - tracing
+  - metrics
+  - opentelemetry
+
+home: https://tracefox.ai
+
+sources:
+  - https://github.com/tracefox-ai/tfx-k8s
+
+maintainers:
+  - name: TraceFox Team
+    email: support@tracefox.ai

@@ -5,3 +5,20 @@ type: application
 version: 0.1.0
 appVersion: "25.7"
 
+keywords:
+  - clickhouse
+  - database
+  - analytics
+  - olap
+  - timeseries
+
+home: https://clickhouse.com
+
+sources:
+  - https://github.com/tracefox-ai/tfx-k8s
+  - https://github.com/Altinity/clickhouse-operator
+
+maintainers:
+  - name: TraceFox Team
+    email: support@tracefox.ai
+

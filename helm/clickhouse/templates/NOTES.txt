@@ -1,0 +1,66 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+📊 **ClickHouse Cluster Status:**
+
+  Check ClickHouse installations:
+    kubectl get chi,chk -n {{ .Release.Namespace }}
+
+  Check all pods:
+    kubectl get pods -n {{ .Release.Namespace }}
+
+{{- if .Values.keeper.enabled }}
+  Expected Keeper pods: {{ .Values.keeper.replicasCount }}
+{{- end }}
+{{- if .Values.clickhouse.enabled }}
+  Expected ClickHouse pods: {{ mul .Values.clickhouse.cluster.shardsCount .Values.clickhouse.cluster.replicasCount }}
+{{- end }}
+
+🔌 **Connecting to ClickHouse:**
+
+{{- if eq .Values.clickhouse.service.type "LoadBalancer" }}
+  Get the LoadBalancer IP:
+    export SERVICE_IP=$(kubectl get svc -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+    echo "ClickHouse HTTP: http://$SERVICE_IP:8123"
+    echo "ClickHouse TCP: $SERVICE_IP:9000"
+
+{{- else }}
+  Port forward to access locally:
+    kubectl port-forward -n {{ .Release.Namespace }} svc/clickhouse-{{ .Values.clickhouse.cluster.name }} 8123:8123 9000:9000
+    
+  Then connect:
+    clickhouse-client --host localhost --port 9000 --user admin --password <your-password>
+    # Or via HTTP:
+    curl http://localhost:8123/?query=SELECT%20version()
+{{- end }}
+
+🔐 **Security Notes:**
+
+{{- if and (not .Values.externalSecrets.enabled) (eq .Values.clickhouse.users.admin.password "") }}
+  ⚠️  WARNING: Admin password is not set!
+  
+  Set password via:
+    helm upgrade {{ .Release.Name }} . --set clickhouse.users.admin.password=<secure-password>
+  
+  Or use External Secrets Operator (recommended):
+    helm upgrade {{ .Release.Name }} . --set externalSecrets.enabled=true
+{{- end }}
+
+📚 **Useful Commands:**
+
+  # Check ClickHouse version
+  kubectl exec -n {{ .Release.Namespace }} chi-{{ .Values.clickhouse.cluster.name }}-0-0-0 -- clickhouse-client --query "SELECT version()"
+  
+  # View ClickHouse logs
+  kubectl logs -n {{ .Release.Namespace }} chi-{{ .Values.clickhouse.cluster.name }}-0-0-0
+  
+  # Check cluster status
+  kubectl exec -n {{ .Release.Namespace }} chi-{{ .Values.clickhouse.cluster.name }}-0-0-0 -- clickhouse-client --query "SELECT * FROM system.clusters"
+
+For more information, see the chart README.md

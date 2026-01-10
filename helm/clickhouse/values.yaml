@@ -14,7 +14,7 @@ keeper:
   
   image:
     repository: clickhouse/clickhouse-keeper
-    tag: latest
+    tag: "24.3-alpine"  # Pinned version for stability
     pullPolicy: IfNotPresent
   
   resources:
@@ -123,3 +123,12 @@ clickhouse:
         port: 8123
       - name: tcp
         port: 9000
+
+# External Secrets Operator configuration (optional)
+# Enable this to use External Secrets Operator for secret management
+externalSecrets:
+  enabled: false
+  secretStore: "aws-secrets-manager"  # Name of your SecretStore
+  secretStoreKind: "SecretStore"  # or "ClusterSecretStore"
+  # Path to admin password in your secret backend
+  adminPasswordPath: "clickhouse/admin-password"

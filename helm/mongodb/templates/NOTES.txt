@@ -1,0 +1,57 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+📊 **MongoDB Replica Set Status:**
+
+  Check MongoDB resources:
+    kubectl get mongodbcommunity -n {{ .Release.Namespace }}
+
+  Check all pods:
+    kubectl get pods -n {{ .Release.Namespace }} -l app={{ .Values.mongodb.name }}
+
+  Expected pods: {{ .Values.mongodb.members }}
+
+🔌 **Connecting to MongoDB:**
+
+  Get the connection string:
+    # For applications in the same namespace:
+    mongodb://{{ .Values.mongodb.name }}-svc.{{ .Release.Namespace }}.svc.cluster.local:27017
+
+  Port forward to access locally:
+    kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Values.mongodb.name }}-svc 27017:27017
+    
+  Then connect:
+    mongosh "mongodb://localhost:27017" -u my-user -p <your-password>
+
+🔐 **Security Notes:**
+
+{{- if and (not .Values.secret.enabled) }}
+  ⚠️  WARNING: User password secret is not configured!
+  
+  Make sure to create the password secret:
+    kubectl create secret generic my-user-password \
+      -n {{ .Release.Namespace }} \
+      --from-literal=password=<your-secure-password>
+{{- end }}
+
+  Default user: {{ (index .Values.mongodb.users 0).name }}
+  Password secret: {{ (index .Values.mongodb.users 0).passwordSecretRef.name }}
+
+📚 **Useful Commands:**
+
+  # Check replica set status
+  kubectl exec -n {{ .Release.Namespace }} {{ .Values.mongodb.name }}-0 -- mongosh --eval "rs.status()"
+  
+  # View MongoDB logs
+  kubectl logs -n {{ .Release.Namespace }} {{ .Values.mongodb.name }}-0
+  
+  # List databases
+  kubectl exec -n {{ .Release.Namespace }} {{ .Values.mongodb.name }}-0 -- mongosh --eval "show dbs"
+
+For more information, see the chart README.md

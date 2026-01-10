@@ -34,7 +34,10 @@ clickhouse:
   
   users:
     admin:
-      password: "prod-password"
+      # IMPORTANT: Do NOT commit passwords to Git!
+      # Set via: helm install --set clickhouse.users.admin.password=xxx
+      # Or use external-secrets (see templates/external-secret.yaml)
+      password: ""  # Set via --set flag or external-secrets
   
   service:
     type: LoadBalancer

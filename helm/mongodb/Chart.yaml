@@ -5,3 +5,19 @@ type: application
 version: 0.1.0
 appVersion: "6.0.5"
 
+keywords:
+  - mongodb
+  - database
+  - nosql
+  - replicaset
+
+home: https://www.mongodb.com
+
+sources:
+  - https://github.com/tracefox-ai/tfx-k8s
+  - https://github.com/mongodb/mongodb-kubernetes-operator
+
+maintainers:
+  - name: TraceFox Team
+    email: support@tracefox.ai
+

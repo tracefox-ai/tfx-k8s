@@ -1,0 +1,64 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+{{- if .Values.nginx.enabled }}
+
+📡 **Access TraceFox UI:**
+
+{{- if eq .Values.nginx.service.type "LoadBalancer" }}
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+  
+  Get the LoadBalancer IP:
+    export SERVICE_IP=$(kubectl get svc {{ include "tracefox.fullname" . }}-nginx -n {{ .Release.Namespace }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    echo "TraceFox UI: http://$SERVICE_IP"
+
+{{- else if eq .Values.nginx.service.type "ClusterIP" }}
+  Forward the port to access locally:
+    kubectl port-forward svc/{{ include "tracefox.fullname" . }}-nginx -n {{ .Release.Namespace }} 8080:80
+    
+  Then access: http://localhost:8080
+
+{{- end }}
+{{- end }}
+
+🔐 **Important Security Notes:**
+
+{{- if and (not .Values.externalSecrets.enabled) (or (eq .Values.secrets.hyperdxApiKey "") (eq .Values.secrets.clickhouseAdminPassword "")) }}
+  ⚠️  WARNING: Secrets are not configured!
+  
+  You must set secrets via one of these methods:
+  1. External Secrets Operator (recommended):
+     - Set externalSecrets.enabled=true
+     - Configure your SecretStore
+  
+  2. Helm --set flags:
+     helm upgrade {{ .Release.Name }} . \
+       --set secrets.hyperdxApiKey=<your-key> \
+       --set secrets.clickhouseAdminPassword=<your-password>
+  
+  3. Separate secrets file (not committed to Git):
+     helm upgrade {{ .Release.Name }} . -f secrets.yaml
+{{- end }}
+
+📊 **Components Deployed:**
+  - App: {{ .Values.app.replicaCount }} replica(s)
+  - OTLP Gateway: {{ .Values.otlpGateway.replicaCount }} replica(s)
+  - Collector Shards: {{ .Values.collector.shards }} shard(s)
+{{- if .Values.nginx.enabled }}
+  - Nginx: Enabled
+{{- end }}
+
+📚 **Next Steps:**
+  1. Configure secrets (see security notes above)
+  2. Verify all pods are running:
+     kubectl get pods -n {{ .Release.Namespace }}
+  3. Check logs if needed:
+     kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "tracefox.name" . }}
+
+For more information, visit: {{ .Values.frontendUrl }}

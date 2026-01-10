@@ -16,6 +16,11 @@ mongo:
   enabled: false  # MongoDB is now managed by a separate chart (helm/mongo)
 
 secrets:
-  # In reality, do NOT commit secrets here. Use external-secrets or a secure way to inject them.
-  hyperdxApiKey: "prod-key"
-  clickhouseAdminPassword: "prod-password"
+  # IMPORTANT: Do NOT commit actual secrets to Git!
+  # Use one of these approaches:
+  # 1. External Secrets Operator (recommended) - see templates/external-secret.yaml
+  # 2. Sealed Secrets
+  # 3. helm install --set secrets.hyperdxApiKey=xxx --set secrets.clickhouseAdminPassword=xxx
+  # 4. Use a separate secrets.yaml file (not committed to Git)
+  hyperdxApiKey: ""  # Set via external-secrets or --set flag
+  clickhouseAdminPassword: ""  # Set via external-secrets or --set flag

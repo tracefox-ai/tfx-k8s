@@ -79,3 +79,15 @@ secrets:
   mongoUri: "mongodb://mongo:27017/hyperdx"
 
 frontendUrl: "https://demo.tracefox.ai"
+
+# External Secrets Operator configuration (optional)
+# Enable this to use External Secrets Operator for secret management
+externalSecrets:
+  enabled: false
+  secretStore: "aws-secrets-manager"  # Name of your SecretStore
+  secretStoreKind: "SecretStore"  # or "ClusterSecretStore"
+  # Paths to secrets in your secret backend (e.g., AWS Secrets Manager, Vault)
+  hyperdxApiKeyPath: "tracefox/hyperdx-api-key"
+  clickhousePasswordPath: "tracefox/clickhouse-password"
+  mongoUriPath: "tracefox/mongo-uri"
+
