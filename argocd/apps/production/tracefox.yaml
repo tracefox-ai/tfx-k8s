@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: production
   source:
     repoURL: https://github.com/tracefox-ai/tfx-k8s.git
     targetRevision: HEAD

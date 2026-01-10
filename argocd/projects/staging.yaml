@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: staging
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Staging environment applications
+  
+  # Restrict to staging namespace only
+  destinations:
+    - namespace: staging
+      server: https://kubernetes.default.svc
+  
+  # Allow sources from tfx-k8s repo only
+  sourceRepos:
+    - https://github.com/tracefox-ai/tfx-k8s.git
+  
+  # Deny cluster-scoped resources
+  clusterResourceWhitelist: []
+  
+  # Allow all namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

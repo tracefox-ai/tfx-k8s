@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: production
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Production environment applications
+  
+  # Restrict to production namespace only
+  destinations:
+    - namespace: production
+      server: https://kubernetes.default.svc
+  
+  # Allow sources from tfx-k8s repo only
+  sourceRepos:
+    - https://github.com/tracefox-ai/tfx-k8s.git
+  
+  # Deny cluster-scoped resources
+  clusterResourceWhitelist: []
+  
+  # Allow all namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

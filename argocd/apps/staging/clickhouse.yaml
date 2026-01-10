@@ -1,22 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mongodb-staging
+  name: clickhouse-staging
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: staging
   source:
     repoURL: https://github.com/tracefox-ai/tfx-k8s.git
     targetRevision: HEAD
-    path: helm/mongodb
+    path: helm/clickhouse
     helm:
       valueFiles:
         - values-staging.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: mongodb
+    namespace: staging
   syncPolicy:
     automated:
       prune: true

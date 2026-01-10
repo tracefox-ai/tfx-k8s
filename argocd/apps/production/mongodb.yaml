@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: production
   source:
     repoURL: https://github.com/tracefox-ai/tfx-k8s.git
     targetRevision: HEAD
@@ -16,7 +16,7 @@ spec:
         - values-prod.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: mongodb
+    namespace: production
   syncPolicy:
     automated:
       prune: true
