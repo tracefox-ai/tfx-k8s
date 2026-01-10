@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mongodb-community-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://mongodb.github.io/helm-charts
+    chart: community-operator
+    targetRevision: "*"  # Use latest version, or specify a version like "0.9.0"
+    helm:
+      # Optional: Add any values you want to override
+      # values: |
+      #   image:
+      #     repository: mongodb/mongodb-kubernetes-operator
+      #     tag: "0.9.0"
+  # Note: ArgoCD can access public Helm repositories directly.
+  # For private repositories or if you encounter issues, add the repository to ArgoCD:
+  # argocd repo add https://mongodb.github.io/helm-charts --type helm
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mongodb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+

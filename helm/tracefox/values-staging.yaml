@@ -12,6 +12,9 @@ frontendUrl: "https://staging.tracefox.ai"
 collector:
   shards: 2
 
+mongo:
+  enabled: false  # MongoDB is now managed by a separate chart (helm/mongo)
+
 secrets:
   # In reality, do NOT commit secrets here. Use external-secrets or a secure way to inject them.
   hyperdxApiKey: "staging-key"

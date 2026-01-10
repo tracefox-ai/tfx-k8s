@@ -13,8 +13,7 @@ collector:
   shards: 4 # More shards for ingestion
 
 mongo:
-  storage:
-    size: 100Gi
+  enabled: false  # MongoDB is now managed by a separate chart (helm/mongo)
 
 secrets:
   # In reality, do NOT commit secrets here. Use external-secrets or a secure way to inject them.

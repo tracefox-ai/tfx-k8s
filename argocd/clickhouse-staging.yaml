@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tracefox-prod
+  name: clickhouse-staging
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,16 +10,17 @@ spec:
   source:
     repoURL: https://github.com/tracefox-ai/tfx-k8s.git
     targetRevision: HEAD
-    path: helm/tracefox
+    path: helm/clickhouse
     helm:
       valueFiles:
-        - values-prod.yaml
+        - values-staging.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: production
+    namespace: staging
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+

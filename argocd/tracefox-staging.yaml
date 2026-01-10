@@ -13,7 +13,7 @@ spec:
     path: helm/tracefox
     helm:
       valueFiles:
-        - ../environments/values-staging.yaml
+        - values-staging.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: staging

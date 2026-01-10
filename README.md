@@ -26,7 +26,9 @@ Go to the `helm` directory for detailed instructions:
 **Important**: Deploy components in this order:
 1. ClickHouse Operator (required for ClickHouse)
 2. ClickHouse (required for TraceFox)
-3. TraceFox Application
+3. MongoDB Community Operator (required for MongoDB)
+4. MongoDB (required for TraceFox)
+5. TraceFox Application
 
 #### Step 1: Deploy ClickHouse Operator
 
@@ -70,7 +72,37 @@ helm upgrade --install clickhouse ./clickhouse \
   -f clickhouse/values-prod.yaml
 ```
 
-#### Step 3: Deploy TraceFox Application
+#### Step 3: Deploy MongoDB Community Operator
+
+Deploy the MongoDB Community Operator using ArgoCD:
+
+```bash
+# Apply the ArgoCD Application manifest
+kubectl apply -f argocd/mongodb-operator.yaml
+```
+
+ArgoCD will automatically:
+- Fetch the chart from the MongoDB Helm repository
+- Install the operator in the `mongodb` namespace
+- Monitor and maintain the installation
+
+Verify the operator is running:
+```bash
+kubectl get pods -n mongodb | grep community-operator
+```
+
+**Note**: If you prefer manual installation, you can use Helm directly:
+```bash
+helm repo add mongodb https://mongodb.github.io/helm-charts
+helm install community-operator mongodb/community-operator \
+  --namespace mongodb --create-namespace
+```
+
+#### Step 4: Deploy MongoDB
+
+After installing the operator, deploy MongoDB resources using MongoDB Community Operator CRDs. See the [MongoDB Community Operator documentation](https://github.com/mongodb/mongodb-kubernetes-operator) for details.
+
+#### Step 5: Deploy TraceFox Application
 
 **Staging:**
 ```bash
@@ -90,6 +122,7 @@ helm upgrade --install tracefox ./tracefox \
 
 For more details, see:
 *   [ClickHouse Chart Documentation](helm/clickhouse/README.md)
+*   [MongoDB Community Operator Documentation](https://github.com/mongodb/mongodb-kubernetes-operator)
 *   [TraceFox Chart Documentation](helm/README.md)
 
 

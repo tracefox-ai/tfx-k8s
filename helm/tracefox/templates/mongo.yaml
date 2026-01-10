@@ -1,3 +1,4 @@
+{{- if .Values.mongo.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -52,3 +53,4 @@ spec:
   clusterIP: None
   selector:
     app: mongo
+{{- end }}
