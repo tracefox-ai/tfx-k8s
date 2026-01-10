@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: clickhouse-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://docs.altinity.com/clickhouse-operator
+    chart: altinity-clickhouse-operator
+    targetRevision: "*"  # Use latest version, or specify a version like "0.21.0"
+    helm:
+      # Optional: Add any values you want to override
+      # values: |
+      #   image:
+      #     repository: altinity/clickhouse-operator
+      #     tag: "0.21.0"
+  # Note: ArgoCD can access public Helm repositories directly.
+  # For private repositories or if you encounter issues, add the repository to ArgoCD:
+  # argocd repo add https://docs.altinity.com/clickhouse-operator --type helm
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: clickhouse
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+

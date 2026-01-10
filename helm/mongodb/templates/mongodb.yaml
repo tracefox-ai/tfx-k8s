@@ -1,0 +1,32 @@
+{{- if .Values.mongodb.enabled }}
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: {{ .Values.mongodb.name }}
+  labels:
+    {{- include "mongodb.labels" . | nindent 4 }}
+spec:
+  members: {{ .Values.mongodb.members }}
+  type: {{ .Values.mongodb.type }}
+  version: {{ .Values.mongodb.version | quote }}
+  security:
+    {{- toYaml .Values.mongodb.security | nindent 4 }}
+  users:
+    {{- range .Values.mongodb.users }}
+    - name: {{ .name }}
+      db: {{ .db }}
+      passwordSecretRef:
+        name: {{ .passwordSecretRef.name }}
+      roles:
+        {{- range .roles }}
+        - name: {{ .name }}
+          db: {{ .db }}
+        {{- end }}
+      scramCredentialsSecretName: {{ .scramCredentialsSecretName }}
+    {{- end }}
+  {{- if .Values.mongodb.additionalMongodConfig }}
+  additionalMongodConfig:
+    {{- toYaml .Values.mongodb.additionalMongodConfig | nindent 4 }}
+  {{- end }}
+{{- end }}
+

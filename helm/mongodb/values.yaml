@@ -1,0 +1,39 @@
+# Default values for mongodb
+# This is a YAML-formatted file.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# MongoDB Community configuration
+mongodb:
+  enabled: true
+  name: mongodb
+  members: 3
+  type: ReplicaSet
+  version: "6.0.5"
+  
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  
+  users:
+    - name: my-user
+      db: admin
+      passwordSecretRef:
+        name: my-user-password
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+      scramCredentialsSecretName: my-scram
+  
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.journalCompressor: zlib
+
+# Secret configuration for user passwords
+secret:
+  enabled: true
+  name: my-user-password
+  password: <your-password-here>
+

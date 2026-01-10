@@ -1,0 +1,24 @@
+# Staging environment values for MongoDB chart
+
+mongodb:
+  enabled: true
+  name: mongodb
+  members: 3
+  version: "6.0.5"
+  
+  users:
+    - name: my-user
+      db: admin
+      passwordSecretRef:
+        name: my-user-password
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+      scramCredentialsSecretName: my-scram
+
+secret:
+  enabled: true
+  name: my-user-password
+  password: "staging-password-change-me"

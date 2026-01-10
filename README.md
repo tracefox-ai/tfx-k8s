@@ -34,6 +34,29 @@ Go to the `helm` directory for detailed instructions:
 
 The ClickHouse Operator must be installed first as it manages ClickHouse resources. We use the official [Altinity Helm chart](https://github.com/Altinity/helm-charts/tree/main/charts/clickhouse-eks).
 
+**Option A: Deploy via ArgoCD (Recommended)**
+
+Deploy the ClickHouse Operator using ArgoCD:
+
+```bash
+# Apply the ArgoCD Application manifest
+kubectl apply -f argocd/clickhouse-operator.yaml
+```
+
+ArgoCD will automatically:
+- Fetch the chart from the Altinity Helm repository
+- Install the operator in the `clickhouse` namespace
+- Monitor and maintain the installation
+
+Verify the operator is running:
+```bash
+kubectl get pods -n clickhouse | grep clickhouse-operator
+```
+
+**Option B: Manual Installation with Helm**
+
+If you prefer manual installation, you can use Helm directly:
+
 Add the Altinity Helm repository:
 ```bash
 helm repo add altinity-operator https://docs.altinity.com/clickhouse-operator
@@ -100,7 +123,29 @@ helm install community-operator mongodb/community-operator \
 
 #### Step 4: Deploy MongoDB
 
-After installing the operator, deploy MongoDB resources using MongoDB Community Operator CRDs. See the [MongoDB Community Operator documentation](https://github.com/mongodb/mongodb-kubernetes-operator) for details.
+After installing the operator, deploy MongoDB using the Helm chart:
+
+**Staging:**
+```bash
+cd helm
+helm upgrade --install mongodb ./mongodb \
+  -n mongodb \
+  -f mongodb/values-staging.yaml
+```
+
+**Production:**
+```bash
+cd helm
+helm upgrade --install mongodb ./mongodb \
+  -n mongodb \
+  -f mongodb/values-prod.yaml
+```
+
+Verify MongoDB is running:
+```bash
+kubectl get mongodbcommunity -n mongodb
+kubectl get pods -n mongodb | grep mongodb
+```
 
 #### Step 5: Deploy TraceFox Application
 

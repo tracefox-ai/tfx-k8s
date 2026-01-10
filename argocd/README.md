@@ -17,10 +17,15 @@ The Application manifests for Staging and Production are located in this directo
 - `clickhouse-staging.yaml` - ClickHouse cluster for staging
 - `clickhouse-prod.yaml` - ClickHouse cluster for production
 
-### MongoDB Community Operator
+### MongoDB Applications
+- `mongodb-staging.yaml` - MongoDB cluster for staging
+- `mongodb-prod.yaml` - MongoDB cluster for production
+
+### Operators
+- `clickhouse-operator.yaml` - Altinity ClickHouse Operator (cluster-wide operator for managing ClickHouse resources)
 - `mongodb-operator.yaml` - MongoDB Community Operator (cluster-wide operator for managing MongoDB resources)
 
-**Note**: The MongoDB Community Operator is deployed via ArgoCD using the Helm repository. After deploying the operator, you can create MongoDB resources using MongoDB Community Operator CRDs.
+**Note**: The operators are deployed via ArgoCD using Helm repositories. After deploying the ClickHouse operator, you can create ClickHouse resources using Altinity ClickHouse Operator CRDs. Similarly, after deploying the MongoDB operator, you can create MongoDB resources using MongoDB Community Operator CRDs.
 
 ### Prerequisites
 
@@ -32,9 +37,13 @@ The Application manifests for Staging and Production are located in this directo
        repoURL: https://github.com/YOUR_ORG/YOUR_REPO.git  # <--- Update this
    ```
 
-2. **Helm Repository for MongoDB Operator**:
-   ArgoCD can access the MongoDB Helm repository directly. If you encounter issues, you may need to add it to ArgoCD's repository list:
+2. **Helm Repositories for Operators**:
+   ArgoCD can access public Helm repositories directly. If you encounter issues, you may need to add them to ArgoCD's repository list:
    ```bash
+   # Add ClickHouse Operator repository
+   argocd repo add https://docs.altinity.com/clickhouse-operator --type helm
+   
+   # Add MongoDB Operator repository
    argocd repo add https://mongodb.github.io/helm-charts --type helm
    ```
 
@@ -46,16 +55,19 @@ The Application manifests for Staging and Production are located in this directo
 Run the following commands to create the applications in ArgoCD:
 
 ```bash
-# Deploy MongoDB Community Operator (cluster-wide, deploy once)
+# Deploy Operators (cluster-wide, deploy once)
+kubectl apply -f clickhouse-operator.yaml
 kubectl apply -f mongodb-operator.yaml
 
 # Deploy Staging Applications
 kubectl apply -f tracefox-staging.yaml
 kubectl apply -f clickhouse-staging.yaml
+kubectl apply -f mongodb-staging.yaml
 
 # Deploy Production Applications
 kubectl apply -f tracefox-prod.yaml
 kubectl apply -f clickhouse-prod.yaml
+kubectl apply -f mongodb-prod.yaml
 ```
 
 ### Verify
